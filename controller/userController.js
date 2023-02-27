@@ -8,6 +8,7 @@ const User = require('../models/userModel')
 // @route /api/users
 // @access Public
 const registerUser = asyncHandler(async (req, res) => {
+
     const { name, email, password } = req.body
 
     // Validation
@@ -48,16 +49,79 @@ const registerUser = asyncHandler(async (req, res) => {
         res.status(400)
         throw new error('Invalid user data')
     }
-
-
-//     console.log(req.body)
-   res.send("Register Routes")
+    
+    // console.log(req.body)
 })
 
 
-const loginUser = (req, res) => {
-    res.send('Login Route')
-}
+
+
+
+// @desc   Login a user
+// @route  /api/users/login
+// @access Public
+
+
+
+// using try catch
+// const loginUser = async (req, res) => {
+//     try {
+//         const { email, password } = req.body
+
+//         const user = await User.findOne({ email })
+
+//         if(user && (await bcrypt.compare(password, user.password))) {
+//             res.status(200).json({
+//                 _id: user._id,
+//                 name: user.name,
+//                 email: user.email,
+//             })
+//         } else {
+//             res.status(401)
+//             throw new Error('Invalid Credentials')
+//         }
+        
+//     } catch (error) {
+//         console.log(error)
+//         res.status(500).json({
+//             Error: "Invalid credentials"
+//         })
+//     }
+    
+//     // console.log(req.body)
+//     // res.send('Login Route')
+// }
+
+
+
+
+
+// using express-async-handler
+const loginUser = asyncHandler (async (req, res) => {
+
+    const { email, password } = req.body
+
+    const user = await User.findOne({ email })
+
+    if(user && (await bcrypt.compare(password, user.password))) {
+        res.status(200).json({
+            message: "User Login Successfully",
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+        })
+    } else {
+        res.status(401)
+        throw new Error('Invalid Credentials')
+    }
+    // console.log(req.body)
+    // res.send('Login Route')
+})
+
+
+
+
+
 
 
 module.exports = {
