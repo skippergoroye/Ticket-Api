@@ -1,6 +1,6 @@
 const express = require('express')
 const userRoutes = require('./routes/userRoutes')
-const { errrorHandler } = require('./middleware/errorMiddleware')
+// const { errorHandler } = require('./middleware/errorMiddleware')
 const dotenv = require('dotenv').config()
 
 
@@ -26,7 +26,7 @@ app.use('/api/users', userRoutes)
 
 
 
-app.use(errrorHandler)
+// app.use(errorHandler)
 
 
 

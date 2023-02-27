@@ -1,17 +1,18 @@
+// const asyncHandler = require('express-async-handler')
+
+
+
 // @descRegsiter a new User
 // @route /api/users
 // @access Public
-const registerUser = async(req, res) => {
+const registerUser = async (req, res) => {
     const { name, email, password } = req.body
 
     // Validation
-    // if(!name || !email || !password){
-    //     return res.status(400).json({ message: "Please Include all fields"})
-    // }
     if(!name || !email || !password){
-        return res.status(400)
-        throw new Error('Please include all fields')
+        return res.status(400).json({ message: "Please Include all fields"})
     }
+
 
 
 //     console.log(req.body)
