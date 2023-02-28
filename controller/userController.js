@@ -1,6 +1,11 @@
 const asyncHandler = require('express-async-handler')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+
 const User = require('../models/userModel')
+const { generateToken } = require('../utils/utilityFunction')
+const { GenerateOTP, emailHtml, sendEmail } = require('../utils/notification')
+const { adminMail, userSubject } = require('../config/index')
 
 
 
@@ -29,26 +34,60 @@ const registerUser = asyncHandler(async (req, res) => {
     // Hash Password
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
+    
+
+    // Generate OTP
+    const { otp, expiryTime } = GenerateOTP()
 
 
-    // Create user
-    const user = await User.create({
+    // Send Mail TO User
+    const html = emailHtml(otp, name)
+
+    const sent = await sendEmail(adminMail, email, userSubject, html)
+
+    const newUser = await User.create({
         name,
         email,
-        password: hashedPassword
-    })
-
-
-    if(user){
+        password: hashedPassword,
+        verified: false,
+        otp,
+        otpExpiry: expiryTime
+      })
+    
+      if (newUser && sent) {
         res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email
+          message: 'Registration successful, check mail for otp',
+          newUser,
+          token: generateToken(newUser._id),
         })
-    } else {
+      } else {
         res.status(400)
-        throw new error('Invalid user data')
-    }
+        throw new Error('Invalid user data')
+      }
+
+    
+
+
+
+    // // Create user
+    // const user = await User.create({
+    //     name,
+    //     email,
+    //     password: hashedPassword,
+    // })
+
+
+    // if(user){
+    //     res.status(201).json({
+    //         _id: user._id,
+    //         name: user.name,
+    //         email: user.email,
+    //         token: generateToken(user._id)
+    //     })
+    // } else {
+    //     res.status(400)
+    //     throw new error('Invalid user data')
+    // }
     
     // console.log(req.body)
 })
@@ -96,6 +135,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
+
+
 // using express-async-handler
 const loginUser = asyncHandler (async (req, res) => {
 
@@ -109,6 +150,7 @@ const loginUser = asyncHandler (async (req, res) => {
             _id: user._id,
             name: user.name,
             email: user.email,
+            token: generateToken(user._id)
         })
     } else {
         res.status(401)
