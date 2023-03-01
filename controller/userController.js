@@ -81,16 +81,47 @@ const resendOtp = asyncHandler (async(req, res) => {
     // Find user by email
     const user = await User.findOne({ email: email})
 
-    // Check if user exists and OTP is valid
-    if(!user || user.otpExpiration > new Date()){
-        res.status(401).send('Invalid OTP')
-        return
-    }
-
+    // Check if exist
     if(!user){
-       
+        res.status(400)
+        throw new Error("You are not a registered user")
     }
 
+
+    // check if user is verified
+    if(user.verified){
+        res.status(400)
+        throw new Error("You are already verified")
+      }
+
+    
+
+
+    // Generate new OTP and update user document
+    const { otp, expiryTime } = GenerateOTP()
+    user.otp = otp
+    user.otpExpiry = expiryTime
+    await user.save()
+
+    //  console.log(otp)
+    //  console.log(expiryTime)
+
+
+    // Send Mail TO User with Nodemailer
+    const html = emailHtml(otp, user.name)
+
+    const sent = await sendEmail(adminMail, email, userSubject, html)
+
+
+    if(sent){
+        res.status(200).json({
+          message: "OTP resent, check your email",
+          token: generateToken(user._id)
+        })
+      }else{
+        res.status(400)
+        throw new Error("Please try again")
+      }
 })
 
 
@@ -114,23 +145,24 @@ const resendOtp = asyncHandler (async(req, res) => {
 // @route /api/users/verify-otp
 // @access Private
 const verifyUser = asyncHandler( async(req, res) => {
+    const { otp } = req.body
 
-    const {otp } = req.body
-    
+    // Find user by id
     const user = await User.findById(req.user.id)
-    if (!user) {
+
+    // Check if otp is correct
+    if(otp !== user.otp) {
         res.status(401)
-        throw new Error('You are not registered')
+        throw new Error('Invalid otp please Enter the Right otp')
     }
-    
 
 
-    
-    // Check if user exists and OTP is valid
-    if (!user || user.otp !== otp || user.otpExpiration < new Date()) {
+    // Check if OTP is still valid or Expired
+    if (user.otpExpiry > new Date()) {
         res.status(401).send('Invalid OTP Or Expired OTP');
         return;
     }
+    
 
 
     // OTP is valid, clear it from user document
@@ -293,6 +325,7 @@ const getMe = asyncHandler( async (req, res) => {
 
 module.exports = {
     registerUser,
+    resendOtp,
     verifyUser,
     verifyUserVictor,
     loginUser,

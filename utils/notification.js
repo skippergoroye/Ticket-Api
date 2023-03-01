@@ -14,7 +14,7 @@ const GenerateOTP = () => {
   
     const expiryTime = new Date();
   
-    expiryTime.setTime(new Date().getTime() + 30 * 60 * 1000);
+    expiryTime.setTime(new Date().getTime() + 5 * 60 * 1000); // OTP expires in 5 minutes
     return { otp, expiryTime };
 };
 
@@ -56,7 +56,7 @@ const emailHtml = (otp, name="there") => {
      Welcome to Support Desk
      </h2>
      <p>
-      Hi ${name}, your OTP is ${otp}. It expires in 30 minutes.
+      Hi ${name}, your OTP is ${otp}. It expires in 5 minutes.
      </p>
      </div>
      `
