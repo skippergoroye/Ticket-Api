@@ -72,6 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
 
+
 // @desc  Resend Otp
 // @route /api/users/verify-otp
 // @access Public
@@ -94,7 +95,6 @@ const resendOtp = asyncHandler (async(req, res) => {
         throw new Error("You are already verified")
       }
 
-    
 
 
     // Generate new OTP and update user document
@@ -121,7 +121,7 @@ const resendOtp = asyncHandler (async(req, res) => {
       }else{
         res.status(400)
         throw new Error("Please try again")
-      }
+    }
 })
 
 
@@ -158,7 +158,7 @@ const verifyUser = asyncHandler( async(req, res) => {
 
 
     // Check if OTP is still valid or Expired
-    if (user.otpExpiry > new Date()) {
+    if (user.otpExpiry < new Date()) {
         res.status(401).send('Invalid OTP Or Expired OTP');
         return;
     }
@@ -166,17 +166,12 @@ const verifyUser = asyncHandler( async(req, res) => {
 
 
     // OTP is valid, clear it from user document
-    user.otp = null;
-    user.otpExpiry = null;
+    // user.otp = null;
+    // user.otpExpiry = null;
     await user.save();
 
     // Login successful
     res.status(200).send('Login successful');
-
-    // if(!user.otp === otp && user.otpExpiry >= new Date()){
-
-    // }
-
 })
 
 
@@ -207,13 +202,13 @@ const verifyUserVictor = asyncHandler( async(req, res) => {
         updatedUser,
         token: generateToken(updatedUser.id),
         })
-    }else{
+    } else{
         res.status(400)
         throw new Error('Verification failed')
-    }
-    }else{
-    res.status(401)
-        throw new Error('Invalid otp')
+     }
+    } else {
+       res.status(401)
+       throw new Error('Invalid otp')
     }
 })
 

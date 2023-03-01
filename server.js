@@ -1,6 +1,7 @@
 const express = require('express')
 const colors =  require('colors')
 const userRoutes = require('./routes/userRoutes')
+const ticketRoutes = require('./routes/ticketRoutes')
 const connectDB = require('./config/db')
 // const { errorHandler } = require('./middleware/errorMiddleware')
 const dotenv = require('dotenv').config()
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 
 // Routes
 app.use('/api/users', userRoutes)
+app.use('/api/tickets', ticketRoutes)
 
 
 
