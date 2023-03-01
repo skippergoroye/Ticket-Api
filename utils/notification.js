@@ -1,5 +1,11 @@
 const nodemailer = require('nodemailer')
-const dotenv = require('dotenv').config()
+const {
+    gmailUser,
+    gmailPass,
+    adminMail,
+    userSubject,
+} = require('../config/index')
+
 
 
 // Algorithms To generate Otp
@@ -19,8 +25,8 @@ const GenerateOTP = () => {
 const transport = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.gmail,
-      pass: process.env.gmailPass,
+      user: gmailUser,
+      pass: gmailPass,
     },
 });
 
@@ -30,9 +36,9 @@ const transport = nodemailer.createTransport({
 const sendEmail =  (from, to, subject, html) => {
     try {
       const response =  transport.sendMail({
-        from: process.env.adminMail,
+        from: adminMail,
         to,
-        subject: process.env.userSubject,
+        subject: userSubject,
         html,
       })
       return response
@@ -50,7 +56,7 @@ const emailHtml = (otp, name="there") => {
      Welcome to Support Desk
      </h2>
      <p>
-     Hi ${name}, your OTP is ${otp}. It expires in 30 minutes.
+      Hi ${name}, your OTP is ${otp}. It expires in 30 minutes.
      </p>
      </div>
      `

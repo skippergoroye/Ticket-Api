@@ -1,7 +1,5 @@
 const asyncHandler = require('express-async-handler')
 const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-
 const User = require('../models/userModel')
 const { generateToken } = require('../utils/utilityFunction')
 const { GenerateOTP, emailHtml, sendEmail } = require('../utils/notification')
@@ -9,7 +7,9 @@ const { adminMail, userSubject } = require('../config/index')
 
 
 
-// @descRegsiter a new User
+
+
+// @desc Regsiter a new User
 // @route /api/users
 // @access Public
 const registerUser = asyncHandler(async (req, res) => {
@@ -40,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const { otp, expiryTime } = GenerateOTP()
 
 
-    // Send Mail TO User
+    // Send Mail TO User with Nodemailer
     const html = emailHtml(otp, name)
 
     const sent = await sendEmail(adminMail, email, userSubject, html)
@@ -64,33 +64,142 @@ const registerUser = asyncHandler(async (req, res) => {
         res.status(400)
         throw new Error('Invalid user data')
       }
-
-    
-
-
-
-    // // Create user
-    // const user = await User.create({
-    //     name,
-    //     email,
-    //     password: hashedPassword,
-    // })
-
-
-    // if(user){
-    //     res.status(201).json({
-    //         _id: user._id,
-    //         name: user.name,
-    //         email: user.email,
-    //         token: generateToken(user._id)
-    //     })
-    // } else {
-    //     res.status(400)
-    //     throw new error('Invalid user data')
-    // }
-    
-    // console.log(req.body)
 })
+
+
+
+
+
+
+
+// @desc  Resend Otp
+// @route /api/users/verify-otp
+// @access Public
+const resendOtp = asyncHandler (async(req, res) => {
+    const { email } = req.body
+    
+    // Find user by email
+    const user = await User.findOne({ email: email})
+
+    // Check if user exists and OTP is valid
+    if(!user || user.otpExpiration > new Date()){
+        res.status(401).send('Invalid OTP')
+        return
+    }
+
+    if(!user){
+       
+    }
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// @desc Verify a new User
+// @route /api/users/verify-otp
+// @access Private
+const verifyUser = asyncHandler( async(req, res) => {
+
+    const {otp } = req.body
+    
+    const user = await User.findById(req.user.id)
+    if (!user) {
+        res.status(401)
+        throw new Error('You are not registered')
+    }
+    
+
+
+    
+    // Check if user exists and OTP is valid
+    if (!user || user.otp !== otp || user.otpExpiration < new Date()) {
+        res.status(401).send('Invalid OTP Or Expired OTP');
+        return;
+    }
+
+
+    // OTP is valid, clear it from user document
+    user.otp = null;
+    user.otpExpiry = null;
+    await user.save();
+
+    // Login successful
+    res.status(200).send('Login successful');
+
+    // if(!user.otp === otp && user.otpExpiry >= new Date()){
+
+    // }
+
+})
+
+
+
+
+
+
+
+const verifyUserVictor = asyncHandler( async(req, res) => {
+    // if(req.user.id === null || req.user.id === undefined){
+    //     res.status(401)
+    //     throw new Error('Session expired. Request new OTP if registered')
+    //   }
+    
+    const user = await User.findById(req.user.id)
+    if (!user) {
+        res.status(401)
+        throw new Error('You are not registered')
+    }
+    
+    const { otp } = req.body
+    
+    if (user.otp === otp && user.otpExpiry >= new Date()){
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, {verified: true}, {new: true})
+    if(updatedUser){
+        res.status(201).json({
+        message: 'Verification successful',
+        updatedUser,
+        token: generateToken(updatedUser.id),
+        })
+    }else{
+        res.status(400)
+        throw new Error('Verification failed')
+    }
+    }else{
+    res.status(401)
+        throw new Error('Invalid otp')
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -99,37 +208,35 @@ const registerUser = asyncHandler(async (req, res) => {
 // @desc   Login a user
 // @route  /api/users/login
 // @access Public
-
-
-
 // using try catch
-// const loginUser = async (req, res) => {
-//     try {
-//         const { email, password } = req.body
+const loginUsertryCatch = async (req, res) => {
+    try {
+        const { email, password } = req.body
 
-//         const user = await User.findOne({ email })
+        const user = await User.findOne({ email })
 
-//         if(user && (await bcrypt.compare(password, user.password))) {
-//             res.status(200).json({
-//                 _id: user._id,
-//                 name: user.name,
-//                 email: user.email,
-//             })
-//         } else {
-//             res.status(401)
-//             throw new Error('Invalid Credentials')
-//         }
+        if(user && (await bcrypt.compare(password, user.password))) {
+            res.status(200).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+            })
+        } else {
+            res.status(401)
+            throw new Error('Invalid Credentials')
+        }
         
-//     } catch (error) {
-//         console.log(error)
-//         res.status(500).json({
-//             Error: "Invalid credentials"
-//         })
-//     }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            Error: "Invalid credentials"
+        })
+    }
     
-//     // console.log(req.body)
-//     // res.send('Login Route')
-// }
+    // console.log(req.body)
+    // res.send('Login Route')
+}
+
 
 
 
@@ -165,8 +272,30 @@ const loginUser = asyncHandler (async (req, res) => {
 
 
 
+// @descRegsiter a new User
+// @route /api/users
+// @access Public
+const getMe = asyncHandler( async (req, res) => {
+    const user = {
+        id: req.user._id,
+        email: req.user.email,
+        name: req.user.name,
+    }
+    res.status(200).json(user)
+    // res.status(200).json(req.user)
+})
+
+
+
+
+
+
 
 module.exports = {
     registerUser,
+    verifyUser,
+    verifyUserVictor,
     loginUser,
+    loginUsertryCatch,
+    getMe
 }

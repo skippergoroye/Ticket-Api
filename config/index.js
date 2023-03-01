@@ -1,5 +1,9 @@
 const dotenv = require('dotenv').config()
 
+
+
+
+// Nodemailer
 const gmailUser = process.env.gmail;
 const gmailPass = process.env.gmailPass;
 const adminMail = process.env.adminMail;
