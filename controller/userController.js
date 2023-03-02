@@ -147,6 +147,13 @@ const resendOtp = asyncHandler (async(req, res) => {
 const verifyUser = asyncHandler( async(req, res) => {
     const { otp } = req.body
 
+    // const userId = await req.user.id
+
+    // // Find user by id
+    // const user = await User.findById(userId)
+
+
+
     // Find user by id
     const user = await User.findById(req.user.id)
 
